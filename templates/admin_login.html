@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin – VEP Performance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0D0D0D; color: #F5F5F5; font-family: 'Inter', sans-serif;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #161616; border: 1px solid #222; border-radius: 12px;
+      padding: 40px 32px; width: 100%; max-width: 380px; text-align: center;
+    }
+    .logo {
+      width: 64px; height: 64px; border-radius: 50%; object-fit: cover;
+      margin: 0 auto 20px;
+    }
+    h1 { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+    p { font-size: 13px; color: #777; margin-bottom: 28px; }
+    .form-group { text-align: left; margin-bottom: 16px; }
+    label { display: block; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    input {
+      width: 100%; background: #111; border: 1px solid #2e2e2e; border-radius: 6px;
+      padding: 12px 14px; color: #F5F5F5; font-size: 14px; outline: none; transition: border-color 0.2s;
+    }
+    input:focus { border-color: #E87C1E; }
+    button {
+      width: 100%; background: #E87C1E; color: #0D0D0D; border: none; border-radius: 8px;
+      padding: 14px; font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700;
+      cursor: pointer; margin-top: 8px;
+    }
+    .erro {
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171;
+      border-radius: 6px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <img src="/static/logo.jpg" alt="VEP" class="logo">
+  <h1>Painel Admin</h1>
+  <p>VEP Performance</p>
+  {% if erro %}
+  <div class="erro">{{ erro }}</div>
+  {% endif %}
+  <form method="POST" action="/admin/entrar">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" placeholder="seu@email.com" autofocus required>
+    </div>
+    <div class="form-group">
+      <label for="senha">Senha</label>
+      <input type="password" id="senha" name="senha" placeholder="••••••••" required>
+    </div>
+    <button type="submit">ENTRAR</button>
+  </form>
+</div>
+</body>
+</html>

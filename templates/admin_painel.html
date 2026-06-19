@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel – VEP Performance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0D0D0D; color: #F5F5F5; font-family: 'Inter', sans-serif; min-height: 100vh; }
+
+    header {
+      background: #111; border-bottom: 1px solid #1e1e1e; padding: 16px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 10; flex-wrap: wrap; gap: 12px;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .logo-sm { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+    .header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; }
+    .header-user { font-size: 12px; color: #555; }
+    .btn-sair {
+      background: transparent; border: 1px solid #2a2a2a; border-radius: 6px; padding: 7px 14px;
+      color: #666; font-size: 13px; cursor: pointer; text-decoration: none; transition: all 0.2s;
+    }
+    .btn-sair:hover { border-color: #E87C1E; color: #E87C1E; }
+
+    .content { padding: 28px; max-width: 1000px; margin: 0 auto; }
+
+    /* FILTROS */
+    .filtros-bar {
+      display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;
+      background: #111; border: 1px solid #1e1e1e; border-radius: 10px; padding: 16px;
+    }
+    .filtros-bar input, .filtros-bar select {
+      background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 6px;
+      padding: 9px 12px; color: #fff; font-size: 13px; outline: none;
+    }
+    .filtros-bar input { flex: 1; min-width: 160px; }
+    .btn-filtro {
+      background: #E87C1E; color: #0D0D0D; border: none; border-radius: 6px;
+      padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    .btn-limpar {
+      background: transparent; border: 1px solid #2a2a2a; color: #777; border-radius: 6px;
+      padding: 9px 14px; font-size: 13px; text-decoration: none;
+    }
+
+    .resumo-bar { display: flex; gap: 14px; margin-bottom: 28px; flex-wrap: wrap; }
+    .resumo-card { background: #111; border: 1px solid #1e1e1e; border-radius: 10px; padding: 14px 22px; }
+    .resumo-num { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; color: #E87C1E; }
+    .resumo-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+
+    .data-grupo { margin-bottom: 32px; }
+    .data-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+    .data-titulo { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; color: #E87C1E; white-space: nowrap; }
+    .data-linha { flex: 1; height: 1px; background: #1e1e1e; }
+
+    .ag-list { display: flex; flex-direction: column; gap: 10px; }
+    .ag-card {
+      background: #111; border: 1px solid #1e1e1e; border-radius: 10px; padding: 16px 20px;
+      display: grid; grid-template-columns: 64px 1fr auto; gap: 16px; align-items: center;
+    }
+    .ag-card.cancelado, .ag-card.remarcado { opacity: 0.5; }
+    .ag-horario { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 800; color: #E87C1E; text-align: center; }
+    .ag-nome { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+    .ag-servico { font-size: 13px; color: #E87C1E; margin-bottom: 6px; }
+    .ag-detalhe { font-size: 12px; color: #555; line-height: 1.7; }
+    .ag-detalhe span { color: #888; }
+    .ag-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+
+    .status-badge {
+      display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 9px;
+      border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .status-confirmado { background: rgba(34,197,94,0.1); color: #4ade80; }
+    .status-aguardando { background: rgba(234,179,8,0.1); color: #facc15; }
+    .status-concluido { background: rgba(59,130,246,0.1); color: #60a5fa; }
+    .status-cancelado { background: rgba(239,68,68,0.1); color: #f87171; }
+    .status-remarcado { background: rgba(168,85,247,0.1); color: #c084fc; }
+
+    .btn-acao {
+      background: transparent; border: 1px solid #2a2a2a; border-radius: 6px;
+      padding: 5px 11px; color: #777; font-size: 11px; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .btn-acao:hover { border-color: #E87C1E; color: #E87C1E; }
+    .btn-acao.danger:hover { border-color: #ef4444; color: #ef4444; }
+
+    .vazio { text-align: center; padding: 80px 24px; color: #333; font-size: 14px; }
+    .vazio-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+
+    /* PAGINAÇÃO */
+    .paginacao { display: flex; gap: 8px; justify-content: center; margin-top: 32px; }
+    .paginacao a, .paginacao span {
+      padding: 8px 14px; border-radius: 6px; border: 1px solid #2a2a2a; color: #888;
+      text-decoration: none; font-size: 13px;
+    }
+    .paginacao .ativo { background: #E87C1E; color: #0D0D0D; border-color: #E87C1E; }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      align-items: center; justify-content: center; z-index: 100; padding: 20px;
+    }
+    .modal-overlay.aberto { display: flex; }
+    .modal {
+      background: #161616; border: 1px solid #2a2a2a; border-radius: 12px;
+      padding: 28px; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto;
+    }
+    .modal h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; margin-bottom: 18px; }
+    .modal .form-group { margin-bottom: 14px; }
+    .modal label { display: block; font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .modal input, .modal select, .modal textarea {
+      width: 100%; background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 6px;
+      padding: 10px 12px; color: #fff; font-size: 14px; outline: none; font-family: 'Inter', sans-serif;
+    }
+    .modal textarea { min-height: 70px; resize: vertical; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+    .btn-modal-salvar {
+      flex: 1; background: #E87C1E; color: #0D0D0D; border: none; border-radius: 8px;
+      padding: 12px; font-weight: 700; cursor: pointer; font-size: 14px;
+    }
+    .btn-modal-cancelar {
+      background: transparent; border: 1px solid #2a2a2a; color: #888; border-radius: 8px;
+      padding: 12px 18px; cursor: pointer; font-size: 14px;
+    }
+    .modal-msg { font-size: 13px; padding: 10px; border-radius: 6px; margin-bottom: 14px; display: none; }
+    .modal-msg.erro { background: rgba(239,68,68,0.1); color: #f87171; display: block; }
+    .modal-msg.sucesso { background: rgba(34,197,94,0.1); color: #4ade80; display: block; }
+
+    @media (max-width: 500px) {
+      .ag-card { grid-template-columns: 1fr; }
+      .content { padding: 18px 14px; }
+      .ag-actions { align-items: flex-start; flex-direction: row; flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <img src="/static/logo.jpg" alt="VEP" class="logo-sm">
+    <div>
+      <div class="header-title">Painel de Agendamentos</div>
+      <div class="header-user">{{ admin_nome }}</div>
+    </div>
+  </div>
+  <a href="/admin/sair" class="btn-sair">Sair</a>
+</header>
+
+<div class="content">
+
+  <form method="GET" action="/admin/painel" class="filtros-bar">
+    <input type="text" name="busca" placeholder="Buscar por nome ou telefone..." value="{{ busca }}">
+    <select name="status">
+      <option value="">Todos os status</option>
+      {% for s in status_validos %}
+      <option value="{{ s }}" {% if status_filtro == s %}selected{% endif %}>{{ s|capitalize }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn-filtro">Filtrar</button>
+    {% if busca or status_filtro %}
+    <a href="/admin/painel" class="btn-limpar">Limpar</a>
+    {% endif %}
+  </form>
+
+  <div class="resumo-bar">
+    <div class="resumo-card">
+      <div class="resumo-num">{{ total }}</div>
+      <div class="resumo-label">Resultado(s)</div>
+    </div>
+    <div class="resumo-card">
+      <div class="resumo-num">{{ por_data|length }}</div>
+      <div class="resumo-label">Datas nesta página</div>
+    </div>
+  </div>
+
+  {% if por_data %}
+    {% for data_str, ags in por_data.items() %}
+      <div class="data-grupo">
+        <div class="data-header">
+          {% set partes = data_str.split('-') %}
+          <span class="data-titulo">{{ partes[2] }}/{{ partes[1] }}/{{ partes[0] }}</span>
+          <div class="data-linha"></div>
+        </div>
+        <div class="ag-list">
+          {% for ag in ags %}
+          <div class="ag-card {{ ag.status }}" id="card-{{ ag.id }}">
+            <div class="ag-horario">{{ ag.horario }}</div>
+            <div>
+              <div class="ag-nome">{{ ag.nome }}</div>
+              <div class="ag-servico">{{ ag.servico }}</div>
+              <div class="ag-detalhe">
+                📱 <span>{{ ag.telefone }}</span> &nbsp;·&nbsp;
+                🏍️ <span>{{ ag.modelo_moto or 'Não informada' }}</span>
+                {% if ag.observacao %}<br>📝 <span>{{ ag.observacao }}</span>{% endif %}
+                {% if ag.motivo_cancelamento %}<br>❌ <span>Motivo: {{ ag.motivo_cancelamento }}</span>{% endif %}
+              </div>
+              <span class="status-badge status-{{ ag.status }}" id="badge-{{ ag.id }}">{{ ag.status }}</span>
+            </div>
+            <div class="ag-actions">
+              <button class="btn-acao" onclick='abrirEditar({{ ag | tojson }})'>Editar</button>
+              <button class="btn-acao" onclick='abrirStatus({{ ag.id }}, "{{ ag.status }}")'>Status</button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+
+    {% if total_paginas > 1 %}
+    <div class="paginacao">
+      {% for p in range(1, total_paginas + 1) %}
+        <a href="/admin/painel?pagina={{ p }}&busca={{ busca }}&status={{ status_filtro }}"
+           class="{{ 'ativo' if p == pagina else '' }}">{{ p }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  {% else %}
+    <div class="vazio">
+      <div class="vazio-icon">📅</div>
+      <p>Nenhum agendamento encontrado.</p>
+    </div>
+  {% endif %}
+
+</div>
+
+<!-- MODAL EDITAR -->
+<div class="modal-overlay" id="modalEditar">
+  <div class="modal">
+    <h3>Editar agendamento</h3>
+    <div class="modal-msg" id="msgEditar"></div>
+    <form id="formEditar">
+      <input type="hidden" id="edit-id">
+      <div class="form-group">
+        <label>Nome</label>
+        <input type="text" id="edit-nome" required>
+      </div>
+      <div class="form-group">
+        <label>Telefone</label>
+        <input type="text" id="edit-telefone" required>
+      </div>
+      <div class="form-group">
+        <label>Serviço</label>
+        <select id="edit-servico" required>
+          <option value="Revisão preventiva">Revisão preventiva</option>
+          <option value="Revisão corretiva">Revisão corretiva</option>
+          <option value="Balanceamento de rodas">Balanceamento de rodas</option>
+          <option value="Preparações">Preparações</option>
+          <option value="Suspensão e amortecedores">Suspensão e amortecedores</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Data</label>
+        <input type="date" id="edit-data" required>
+      </div>
+      <div class="form-group">
+        <label>Horário</label>
+        <input type="text" id="edit-horario" placeholder="Ex: 18:00" required>
+      </div>
+      <div class="form-group">
+        <label>Observação</label>
+        <textarea id="edit-observacao"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-modal-cancelar" onclick="fecharModal('modalEditar')">Cancelar</button>
+        <button type="submit" class="btn-modal-salvar">Salvar alterações</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL STATUS -->
+<div class="modal-overlay" id="modalStatus">
+  <div class="modal">
+    <h3>Alterar status</h3>
+    <div class="modal-msg" id="msgStatus"></div>
+    <form id="formStatus">
+      <input type="hidden" id="status-id">
+      <div class="form-group">
+        <label>Novo status</label>
+        <select id="status-novo" required onchange="toggleMotivo()">
+          {% for s in status_validos %}
+          <option value="{{ s }}">{{ s|capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" id="grupoMotivo" style="display:none">
+        <label>Motivo do cancelamento</label>
+        <textarea id="status-motivo" placeholder="Ex: cliente desmarcou, sem peça disponível..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-modal-cancelar" onclick="fecharModal('modalStatus')">Cancelar</button>
+        <button type="submit" class="btn-modal-salvar">Confirmar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function abrirModal(id) { document.getElementById(id).classList.add('aberto'); }
+function fecharModal(id) { document.getElementById(id).classList.remove('aberto'); }
+
+function abrirEditar(ag) {
+  document.getElementById('edit-id').value = ag.id;
+  document.getElementById('edit-nome').value = ag.nome;
+  document.getElementById('edit-telefone').value = ag.telefone;
+  document.getElementById('edit-servico').value = ag.servico;
+  document.getElementById('edit-data').value = ag.data;
+  document.getElementById('edit-horario').value = ag.horario;
+  document.getElementById('edit-observacao').value = ag.observacao || '';
+  document.getElementById('msgEditar').style.display = 'none';
+  abrirModal('modalEditar');
+}
+
+document.getElementById('formEditar').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const id = document.getElementById('edit-id').value;
+  const fd = new FormData();
+  fd.append('nome', document.getElementById('edit-nome').value);
+  fd.append('telefone', document.getElementById('edit-telefone').value);
+  fd.append('servico', document.getElementById('edit-servico').value);
+  fd.append('data', document.getElementById('edit-data').value);
+  fd.append('horario', document.getElementById('edit-horario').value);
+  fd.append('observacao', document.getElementById('edit-observacao').value);
+
+  const res = await fetch(`/admin/agendamento/${id}/editar`, { method: 'POST', body: fd });
+  const data = await res.json();
+  const msg = document.getElementById('msgEditar');
+  if (data.sucesso) {
+    location.reload();
+  } else {
+    msg.textContent = data.erro || 'Erro ao salvar.';
+    msg.className = 'modal-msg erro';
+  }
+});
+
+function abrirStatus(id, statusAtual) {
+  document.getElementById('status-id').value = id;
+  document.getElementById('status-novo').value = statusAtual;
+  document.getElementById('msgStatus').style.display = 'none';
+  toggleMotivo();
+  abrirModal('modalStatus');
+}
+
+function toggleMotivo() {
+  const status = document.getElementById('status-novo').value;
+  document.getElementById('grupoMotivo').style.display = status === 'cancelado' ? 'block' : 'none';
+}
+
+document.getElementById('formStatus').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const id = document.getElementById('status-id').value;
+  const fd = new FormData();
+  fd.append('status', document.getElementById('status-novo').value);
+  fd.append('motivo', document.getElementById('status-motivo').value);
+
+  const res = await fetch(`/admin/agendamento/${id}/status`, { method: 'POST', body: fd });
+  const data = await res.json();
+  if (data.sucesso) {
+    location.reload();
+  } else {
+    const msg = document.getElementById('msgStatus');
+    msg.textContent = data.erro || 'Erro ao salvar.';
+    msg.className = 'modal-msg erro';
+  }
+});
+</script>
+</body>
+</html>

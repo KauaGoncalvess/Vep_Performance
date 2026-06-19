@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VEP Performance – Mecânica de Motocicletas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --laranja: #E87C1E;
+      --laranja-vivo: #FF8C00;
+      --preto: #080808;
+      --preto-card: #111111;
+      --cinza-escuro: #141414;
+      --cinza: #2A2A2A;
+      --cinza-texto: #777;
+      --branco: #F0F0F0;
+
+      /* Espaçamentos responsivos */
+      --px: clamp(16px, 4vw, 60px);
+      --section-py: clamp(48px, 8vw, 90px);
+      --max-w: 860px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--preto);
+      color: var(--branco);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    img { max-width: 100%; display: block; }
+
+    /* ────────────────────────────────────────
+       HERO
+    ──────────────────────────────────────── */
+    .hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: clamp(80px, 10vh, 120px) var(--px) clamp(80px, 10vh, 120px);
+      overflow: hidden;
+    }
+
+    /* Grade técnica */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(232,124,30,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,124,30,0.05) 1px, transparent 1px);
+      background-size: clamp(40px, 5vw, 70px) clamp(40px, 5vw, 70px);
+      pointer-events: none;
+    }
+
+    /* Brilho central */
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 15%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(700px, 90vw);
+      height: min(700px, 90vw);
+      background: radial-gradient(circle, rgba(232,124,30,0.15) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .hero-bg-art {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.035;
+    }
+
+    .hero-content { position: relative; z-index: 2; width: 100%; }
+
+    .hero-eyebrow {
+      font-size: clamp(10px, 1.5vw, 12px);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--laranja);
+      font-weight: 600;
+      margin-bottom: clamp(12px, 2vw, 20px);
+    }
+
+    .hero-logo {
+      width: clamp(100px, 18vw, 160px);
+      height: clamp(100px, 18vw, 160px);
+      margin: 0 auto clamp(16px, 3vw, 28px);
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 24px rgba(232,124,30,0.45));
+      animation: pulse-glow 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { filter: drop-shadow(0 0 16px rgba(232,124,30,0.35)); }
+      50%       { filter: drop-shadow(0 0 40px rgba(232,124,30,0.70)); }
+    }
+
+    .hero h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(52px, 13vw, 110px);
+      font-weight: 900;
+      line-height: 0.88;
+      letter-spacing: -1px;
+      text-transform: uppercase;
+    }
+    .hero h1 em {
+      display: block;
+      font-style: italic;
+      color: var(--laranja);
+    }
+
+    .hero-sub {
+      margin-top: clamp(12px, 2vw, 20px);
+      font-size: clamp(11px, 1.8vw, 14px);
+      color: var(--cinza-texto);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .hero-divider {
+      width: 48px;
+      height: 2px;
+      background: var(--laranja);
+      margin: clamp(16px, 3vw, 26px) auto;
+    }
+
+    .hero-endereco { font-size: clamp(12px, 1.8vw, 14px); color: #555; }
+    .hero-endereco a { color: var(--laranja); text-decoration: none; }
+
+    .btn-hero {
+      display: inline-block;
+      margin-top: clamp(20px, 4vw, 36px);
+      background: var(--laranja);
+      color: #080808;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(16px, 2.5vw, 20px);
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: clamp(12px, 2vw, 16px) clamp(28px, 5vw, 44px);
+      border-radius: 8px;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .btn-hero:hover {
+      background: #d06e18;
+      box-shadow: 0 8px 30px rgba(232,124,30,0.35);
+    }
+
+    .hero-scroll {
+      position: absolute;
+      bottom: clamp(16px, 3vh, 32px);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: #333;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      z-index: 2;
+    }
+    .hero-scroll-line {
+      width: 1px;
+      height: 36px;
+      background: linear-gradient(to bottom, var(--laranja), transparent);
+      animation: scroll-ani 2s ease-in-out infinite;
+    }
+    @keyframes scroll-ani {
+      0%, 100% { opacity: 0.3; transform: scaleY(0.5); }
+      50%       { opacity: 1;   transform: scaleY(1); }
+    }
+
+    /* ────────────────────────────────────────
+       STATS BAR
+    ──────────────────────────────────────── */
+    .stats-bar {
+      background: var(--cinza-escuro);
+      border-top: 1px solid #1c1c1c;
+      border-bottom: 1px solid #1c1c1c;
+      padding: clamp(20px, 4vw, 32px) var(--px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: clamp(24px, 6vw, 72px);
+      flex-wrap: wrap;
+    }
+    .stat-item { text-align: center; }
+    .stat-num {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(28px, 6vw, 44px);
+      font-weight: 800;
+      color: var(--laranja);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: clamp(9px, 1.4vw, 11px);
+      color: var(--cinza-texto);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* ────────────────────────────────────────
+       SEÇÃO GENÉRICA
+    ──────────────────────────────────────── */
+    .section {
+      padding: var(--section-py) var(--px);
+      max-width: calc(var(--max-w) + var(--px) * 2);
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: clamp(24px, 4vw, 40px);
+    }
+    .section-label {
+      font-size: clamp(10px, 1.5vw, 11px);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--laranja);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, #222, transparent);
+    }
+
+    /* ────────────────────────────────────────
+       SERVIÇOS
+    ──────────────────────────────────────── */
+    .servicos-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: clamp(10px, 2vw, 16px);
+    }
+
+    /* Em TV/monitor largo: 3 colunas */
+    @media (min-width: 1200px) {
+      .servicos-grid { grid-template-columns: repeat(3, 1fr); }
+      .servico-last { grid-column: auto; }
+    }
+
+    .servico-card {
+      background: var(--preto-card);
+      border: 1px solid #1a1a1a;
+      border-left: 3px solid var(--laranja);
+      border-radius: 8px;
+      padding: clamp(14px, 2.5vw, 22px) clamp(14px, 2.5vw, 20px);
+      display: flex;
+      align-items: flex-start;
+      gap: clamp(10px, 2vw, 16px);
+      transition: transform 0.18s, border-color 0.18s;
+    }
+    .servico-card:hover { transform: translateX(4px); }
+    .servico-icon { font-size: clamp(20px, 3.5vw, 26px); flex-shrink: 0; margin-top: 2px; }
+    .servico-nome { font-size: clamp(13px, 2vw, 15px); font-weight: 600; }
+    .servico-desc { font-size: clamp(11px, 1.6vw, 13px); color: var(--cinza-texto); margin-top: 3px; }
+
+    /* Último card: full width abaixo de 1200px */
+    @media (max-width: 1199px) {
+      .servico-last { grid-column: 1 / -1; }
+    }
+
+    /* Mobile: 1 coluna */
+    @media (max-width: 480px) {
+      .servicos-grid { grid-template-columns: 1fr; }
+      .servico-last { grid-column: auto; }
+    }
+
+    /* ────────────────────────────────────────
+       HORÁRIOS
+    ──────────────────────────────────────── */
+    .horarios-section {
+      background: var(--cinza-escuro);
+      border-top: 1px solid #1c1c1c;
+      border-bottom: 1px solid #1c1c1c;
+    }
+    .horarios-inner {
+      padding: var(--section-py) var(--px);
+      max-width: calc(var(--max-w) + var(--px) * 2);
+      margin: 0 auto;
+    }
+    .horarios-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(10px, 2vw, 16px);
+      margin-top: clamp(20px, 3vw, 32px);
+    }
+    @media (max-width: 480px) {
+      .horarios-grid { grid-template-columns: 1fr; }
+    }
+    .horario-card {
+      background: var(--preto-card);
+      border: 1px solid #1e1e1e;
+      border-radius: 8px;
+      padding: clamp(16px, 3vw, 24px);
+      text-align: center;
+    }
+    .horario-dia {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(16px, 2.5vw, 20px);
+      font-weight: 800;
+      color: var(--laranja);
+      margin-bottom: 6px;
+    }
+    .horario-time { font-size: clamp(12px, 1.8vw, 14px); color: var(--cinza-texto); }
+    .horario-fechado { color: #333 !important; }
+
+    /* ────────────────────────────────────────
+       DIFERENCIAIS
+    ──────────────────────────────────────── */
+    .diferenciais-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: clamp(10px, 2vw, 16px);
+    }
+    @media (min-width: 1200px) {
+      .diferenciais-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 480px) {
+      .diferenciais-grid { grid-template-columns: 1fr; }
+    }
+    .diferencial-card {
+      background: var(--preto-card);
+      border: 1px solid #1a1a1a;
+      border-radius: 10px;
+      padding: clamp(18px, 3vw, 26px) clamp(16px, 2.5vw, 22px);
+      text-align: center;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .diferencial-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(232,124,30,0.4);
+    }
+    .diferencial-icon {
+      font-size: clamp(28px, 4vw, 36px);
+      margin-bottom: 12px;
+    }
+    .diferencial-titulo {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(16px, 2.5vw, 19px);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .diferencial-desc {
+      font-size: clamp(12px, 1.6vw, 13px);
+      color: var(--cinza-texto);
+      line-height: 1.5;
+    }
+
+    /* ────────────────────────────────────────
+       LOCALIZAÇÃO
+    ──────────────────────────────────────── */
+    .localizacao-section {
+      background: var(--cinza-escuro);
+      border-top: 1px solid #1c1c1c;
+      border-bottom: 1px solid #1c1c1c;
+    }
+    .localizacao-inner {
+      padding: var(--section-py) var(--px);
+      max-width: calc(var(--max-w) + var(--px) * 2);
+      margin: 0 auto;
+    }
+    .localizacao-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(20px, 4vw, 32px);
+      align-items: stretch;
+    }
+    @media (max-width: 768px) {
+      .localizacao-grid { grid-template-columns: 1fr; }
+    }
+    .localizacao-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: clamp(14px, 2.5vw, 20px);
+    }
+    .localizacao-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .localizacao-icon {
+      font-size: 22px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .localizacao-label {
+      font-size: 11px;
+      color: var(--laranja);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .localizacao-valor {
+      font-size: clamp(13px, 1.8vw, 15px);
+      color: var(--branco);
+      line-height: 1.5;
+    }
+    .localizacao-valor a { color: var(--branco); text-decoration: none; }
+
+    .btn-whatsapp {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #25D366;
+      color: #0a0a0a;
+      font-weight: 700;
+      font-size: clamp(13px, 1.8vw, 15px);
+      padding: clamp(11px, 2vw, 14px) clamp(20px, 3vw, 28px);
+      border-radius: 8px;
+      text-decoration: none;
+      margin-top: 6px;
+      width: fit-content;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-whatsapp:hover { background: #1ebe57; transform: translateY(-2px); }
+
+    .mapa-wrapper {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #1e1e1e;
+      min-height: 280px;
+    }
+    .mapa-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      min-height: 280px;
+      border: 0;
+      filter: grayscale(0.3) contrast(1.1);
+    }
+
+
+    .form-section {
+      padding: var(--section-py) var(--px);
+      max-width: calc(var(--max-w) + var(--px) * 2);
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .form-wrapper {
+      background: var(--preto-card);
+      border: 1px solid #1a1a1a;
+      border-radius: clamp(10px, 2vw, 16px);
+      overflow: hidden;
+      position: relative;
+    }
+    .form-stripe {
+      height: 4px;
+      background: linear-gradient(90deg, var(--laranja), var(--laranja-vivo), var(--laranja));
+    }
+    .form-inner {
+      padding: clamp(24px, 5vw, 48px) clamp(20px, 5vw, 44px);
+    }
+
+    .corner-mark {
+      position: absolute;
+      width: 18px; height: 18px;
+      border-color: var(--laranja);
+      border-style: solid;
+      opacity: 0.25;
+    }
+    .corner-mark.tl { top: 14px; left: 14px; border-width: 2px 0 0 2px; }
+    .corner-mark.tr { top: 14px; right: 14px; border-width: 2px 2px 0 0; }
+    .corner-mark.bl { bottom: 14px; left: 14px; border-width: 0 0 2px 2px; }
+    .corner-mark.br { bottom: 14px; right: 14px; border-width: 0 2px 2px 0; }
+
+    .form-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(28px, 6vw, 42px);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .form-title span { color: var(--laranja); }
+    .form-subtitle {
+      font-size: clamp(12px, 1.8vw, 14px);
+      color: var(--cinza-texto);
+      margin-bottom: clamp(24px, 4vw, 36px);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(12px, 2vw, 18px);
+    }
+    @media (max-width: 520px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-bottom: clamp(12px, 2vw, 18px);
+    }
+
+    label {
+      font-size: clamp(10px, 1.5vw, 12px);
+      font-weight: 600;
+      color: var(--cinza-texto);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    input, select, textarea {
+      background: #0d0d0d;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: clamp(10px, 1.8vw, 14px) clamp(12px, 2vw, 16px);
+      color: var(--branco);
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(13px, 1.8vw, 15px);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--laranja);
+      box-shadow: 0 0 0 3px rgba(232,124,30,0.1);
+    }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23777' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 40px;
+    }
+    select option { background: #111; }
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* SLOTS */
+    .slots-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .slot-btn {
+      background: #0d0d0d;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: clamp(8px, 1.5vw, 11px) clamp(14px, 2.5vw, 20px);
+      color: var(--cinza-texto);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(15px, 2.5vw, 18px);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      touch-action: manipulation;
+    }
+    .slot-btn:hover, .slot-btn:focus { border-color: var(--laranja); color: var(--laranja); }
+    .slot-btn.selected { background: var(--laranja); border-color: var(--laranja); color: #080808; }
+    .slots-msg { font-size: 13px; color: #444; padding: 8px 0; }
+
+    /* BOTÃO PRINCIPAL */
+    .btn-agendar {
+      width: 100%;
+      background: var(--laranja);
+      color: #080808;
+      border: none;
+      border-radius: 10px;
+      padding: clamp(14px, 2.5vw, 18px);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(18px, 3vw, 22px);
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+      touch-action: manipulation;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-agendar::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.4s;
+    }
+    .btn-agendar:hover::after { transform: translateX(100%); }
+    .btn-agendar:hover { background: #d06e18; box-shadow: 0 8px 30px rgba(232,124,30,0.3); }
+    .btn-agendar:active { transform: scale(0.99); }
+    .btn-agendar:disabled { background: #1e1e1e; color: #444; cursor: not-allowed; box-shadow: none; }
+
+    /* FEEDBACK */
+    .feedback {
+      display: none;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: clamp(13px, 1.8vw, 14px);
+      margin-top: 16px;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+    .feedback.sucesso { background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.22); color: #4ade80; }
+    .feedback.erro    { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.22); color: #f87171; }
+
+    /* ────────────────────────────────────────
+       FOOTER
+    ──────────────────────────────────────── */
+    footer {
+      background: var(--cinza-escuro);
+      border-top: 1px solid #1a1a1a;
+      text-align: center;
+      padding: clamp(28px, 5vw, 48px) var(--px);
+    }
+    .footer-logo {
+      width: clamp(48px, 8vw, 72px);
+      height: clamp(48px, 8vw, 72px);
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      margin: 0 auto clamp(12px, 2vw, 18px);
+      opacity: 0.75;
+    }
+    footer p { font-size: clamp(12px, 1.6vw, 13px); color: #3a3a3a; }
+    footer a { color: var(--laranja); text-decoration: none; }
+    .footer-links {
+      margin-top: 14px;
+      display: flex;
+      justify-content: center;
+      gap: clamp(14px, 3vw, 24px);
+      flex-wrap: wrap;
+    }
+    .footer-links a { font-size: clamp(12px, 1.6vw, 13px); }
+
+    /* ────────────────────────────────────────
+       TV / MONITOR GRANDE (≥1600px)
+    ──────────────────────────────────────── */
+    @media (min-width: 1600px) {
+      :root { --max-w: 1100px; }
+      .hero h1 { font-size: 130px; }
+    }
+
+    /* ────────────────────────────────────────
+       TABLET (768–1024px)
+    ──────────────────────────────────────── */
+    @media (max-width: 1024px) and (min-width: 769px) {
+      :root { --px: 32px; }
+    }
+
+    /* ────────────────────────────────────────
+       MOBILE PEQUENO (≤360px)
+    ──────────────────────────────────────── */
+    @media (max-width: 360px) {
+      .hero h1 { font-size: 46px; }
+      .stats-bar { gap: 20px; }
+      .form-inner { padding: 20px 14px; }
+    }
+
+    /* ────────────────────────────────────────
+       REDUCED MOTION
+    ──────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      .hero-logo, .hero-scroll-line { animation: none; }
+      * { transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <svg class="hero-bg-art" viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" fill="white">
+    <g transform="translate(60,80) rotate(-25)">
+      <rect x="0" y="8" width="130" height="16" rx="4"/>
+      <circle cx="8" cy="16" r="22" fill="none" stroke="white" stroke-width="11"/>
+      <circle cx="8" cy="16" r="10"/>
+    </g>
+    <g transform="translate(1150,60)">
+      <rect x="0" y="0" width="22" height="90" rx="4"/>
+      <rect x="-16" y="12" width="54" height="22" rx="3"/>
+      <rect x="-16" y="56" width="54" height="22" rx="3"/>
+    </g>
+    <g transform="translate(180,680) rotate(40)">
+      <rect x="0" y="6" width="110" height="13" rx="3"/>
+      <ellipse cx="6" cy="12" rx="20" ry="13"/>
+      <ellipse cx="104" cy="12" rx="15" ry="11"/>
+    </g>
+    <g transform="translate(1200,480)">
+      <circle cx="55" cy="55" r="50" fill="none" stroke="white" stroke-width="9"/>
+      <circle cx="55" cy="55" r="22" fill="none" stroke="white" stroke-width="6"/>
+      <rect x="50" y="0" width="10" height="24" rx="2"/>
+      <rect x="50" y="86" width="10" height="24" rx="2"/>
+      <rect x="0" y="50" width="24" height="10" rx="2"/>
+      <rect x="86" y="50" width="24" height="10" rx="2"/>
+    </g>
+    <g transform="translate(40,500)">
+      <rect x="8" y="0" width="16" height="55" rx="2"/>
+      <rect x="0" y="0" width="32" height="12" rx="2"/>
+    </g>
+    <g transform="translate(420,730) scale(0.9)" opacity="0.55">
+      <circle cx="65" cy="65" r="55" fill="none" stroke="white" stroke-width="9"/>
+      <circle cx="285" cy="65" r="55" fill="none" stroke="white" stroke-width="9"/>
+      <path d="M65,65 L140,18 L215,18 L285,65" fill="none" stroke="white" stroke-width="11" stroke-linecap="round"/>
+      <path d="M140,18 L170,65 L215,18" fill="none" stroke="white" stroke-width="9"/>
+      <rect x="165" y="0" width="32" height="22" rx="3"/>
+    </g>
+    <g transform="translate(900,120) rotate(15)">
+      <rect x="5" y="0" width="10" height="60" rx="3"/>
+      <rect x="0" y="20" width="20" height="10" rx="2"/>
+      <rect x="0" y="32" width="20" height="10" rx="2"/>
+    </g>
+  </svg>
+
+  <div class="hero-content">
+    <p class="hero-eyebrow">Sete Lagoas · MG</p>
+    <img src="/static/logo.jpg" alt="VEP Performance" class="hero-logo">
+    <h1>VEP <em>Performance</em></h1>
+    <p class="hero-sub">Mecânica de Motocicletas</p>
+    <div class="hero-divider"></div>
+    <p class="hero-endereco">
+      <a href="https://maps.google.com/?q=R.+Walter+de+Almeida+Jardim,+141,+Sete+Lagoas" target="_blank">
+        📍 R. Walter de Almeida Jardim, 141 – Verde Vale
+      </a>
+    </p>
+    <a href="#agendar" class="btn-hero">Agendar agora ↓</a>
+  </div>
+
+  <div class="hero-scroll">
+    <div class="hero-scroll-line"></div>
+    <span>scroll</span>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-num">+500</div>
+    <div class="stat-label">Motos atendidas</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">5</div>
+    <div class="stat-label">Especialidades</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">6×</div>
+    <div class="stat-label">Dias por semana</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">100%</div>
+    <div class="stat-label">Comprometimento</div>
+  </div>
+</div>
+
+<!-- SERVIÇOS -->
+<section class="section">
+  <div class="section-header">
+    <span class="section-label">O que fazemos</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="servicos-grid">
+    <div class="servico-card">
+      <span class="servico-icon">🔧</span>
+      <div>
+        <div class="servico-nome">Revisão preventiva</div>
+        <div class="servico-desc">Manutenção programada completa</div>
+      </div>
+    </div>
+    <div class="servico-card">
+      <span class="servico-icon">🛠️</span>
+      <div>
+        <div class="servico-nome">Revisão corretiva</div>
+        <div class="servico-desc">Diagnóstico e reparo de falhas</div>
+      </div>
+    </div>
+    <div class="servico-card">
+      <span class="servico-icon">⚙️</span>
+      <div>
+        <div class="servico-nome">Balanceamento de rodas</div>
+        <div class="servico-desc">Precisão e segurança em movimento</div>
+      </div>
+    </div>
+    <div class="servico-card">
+      <span class="servico-icon">🏍️</span>
+      <div>
+        <div class="servico-nome">Preparações</div>
+        <div class="servico-desc">Performance e personalização</div>
+      </div>
+    </div>
+    <div class="servico-card servico-last">
+      <span class="servico-icon">🔩</span>
+      <div>
+        <div class="servico-nome">Suspensão e amortecedores</div>
+        <div class="servico-desc">Regulagem e substituição de componentes</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HORÁRIOS -->
+<div class="horarios-section">
+  <div class="horarios-inner">
+    <div class="section-header">
+      <span class="section-label">Horários de atendimento</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="horarios-grid">
+      <div class="horario-card">
+        <div class="horario-dia">Seg – Sex</div>
+        <div class="horario-time">18h às 22h</div>
+      </div>
+      <div class="horario-card">
+        <div class="horario-dia">Sábado</div>
+        <div class="horario-time">08h às 17h</div>
+      </div>
+      <div class="horario-card">
+        <div class="horario-dia horario-fechado">Domingo</div>
+        <div class="horario-time horario-fechado">Fechado · Descanso</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DIFERENCIAIS -->
+<section class="section">
+  <div class="section-header">
+    <span class="section-label">Por que escolher a VEP</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="diferenciais-grid">
+    <div class="diferencial-card">
+      <div class="diferencial-icon">🎯</div>
+      <div class="diferencial-titulo">Atendimento especializado</div>
+      <div class="diferencial-desc">Conhecimento técnico focado em motocicletas, do simples ao complexo.</div>
+    </div>
+    <div class="diferencial-card">
+      <div class="diferencial-icon">⚡</div>
+      <div class="diferencial-titulo">Agendamento rápido</div>
+      <div class="diferencial-desc">Marque seu horário em poucos cliques, direto pelo site.</div>
+    </div>
+    <div class="diferencial-card">
+      <div class="diferencial-icon">🔍</div>
+      <div class="diferencial-titulo">Transparência</div>
+      <div class="diferencial-desc">Você sabe exatamente o que está sendo feito na sua moto.</div>
+    </div>
+    <div class="diferencial-card">
+      <div class="diferencial-icon">⚙️</div>
+      <div class="diferencial-titulo">Peças de qualidade</div>
+      <div class="diferencial-desc">Componentes confiáveis para garantir durabilidade e segurança.</div>
+    </div>
+    <div class="diferencial-card">
+      <div class="diferencial-icon">🏍️</div>
+      <div class="diferencial-titulo">Profissional experiente</div>
+      <div class="diferencial-desc">Anos de prática em manutenção e performance de motocicletas.</div>
+    </div>
+    <div class="diferencial-card">
+      <div class="diferencial-icon">📍</div>
+      <div class="diferencial-titulo">Localização acessível</div>
+      <div class="diferencial-desc">Fácil de chegar, no bairro Verde Vale em Sete Lagoas.</div>
+    </div>
+  </div>
+</section>
+
+<!-- LOCALIZAÇÃO -->
+<div class="localizacao-section">
+  <div class="localizacao-inner">
+    <div class="section-header">
+      <span class="section-label">Onde estamos</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="localizacao-grid">
+      <div class="localizacao-info">
+        <div class="localizacao-item">
+          <span class="localizacao-icon">📍</span>
+          <div>
+            <div class="localizacao-label">Endereço</div>
+            <div class="localizacao-valor">
+              <a href="https://maps.google.com/?q=R.+Walter+de+Almeida+Jardim,+141,+Sete+Lagoas" target="_blank">
+                R. Walter de Almeida Jardim, 141<br>Verde Vale, Sete Lagoas – MG
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="localizacao-item">
+          <span class="localizacao-icon">🕐</span>
+          <div>
+            <div class="localizacao-label">Horários</div>
+            <div class="localizacao-valor">Seg a Sex: 18h–22h<br>Sábado: 8h–17h<br>Domingo: fechado</div>
+          </div>
+        </div>
+        <div class="localizacao-item">
+          <span class="localizacao-icon">📞</span>
+          <div>
+            <div class="localizacao-label">Contato</div>
+            <div class="localizacao-valor">(31) 99457-2780</div>
+          </div>
+        </div>
+        <a href="https://wa.me/5531994572780" target="_blank" class="btn-whatsapp">
+          💬 Chamar no WhatsApp
+        </a>
+      </div>
+      <div class="mapa-wrapper">
+        <iframe
+          src="https://www.google.com/maps?q=R.+Walter+de+Almeida+Jardim,+141,+Sete+Lagoas,+MG&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FORMULÁRIO -->
+<section class="form-section" id="agendar">
+  <div class="section-header">
+    <span class="section-label">Agendamento online</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="form-wrapper">
+    <div class="form-stripe"></div>
+    <div class="corner-mark tl"></div>
+    <div class="corner-mark tr"></div>
+    <div class="corner-mark bl"></div>
+    <div class="corner-mark br"></div>
+
+    <div class="form-inner">
+      <h2 class="form-title">Agende seu <span>atendimento</span></h2>
+      <p class="form-subtitle">Confirmação automática direto no seu WhatsApp.</p>
+
+      <form id="formAgendamento" novalidate>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="nome">Nome *</label>
+            <input type="text" id="nome" name="nome" placeholder="Seu nome completo" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label for="telefone">WhatsApp *</label>
+            <input type="tel" id="telefone" name="telefone" placeholder="(31) 99999-9999" required autocomplete="tel">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="servico">Serviço *</label>
+          <select id="servico" name="servico" required>
+            <option value="">Selecione o serviço</option>
+            <option value="Revisão preventiva">Revisão preventiva</option>
+            <option value="Revisão corretiva">Revisão corretiva</option>
+            <option value="Balanceamento de rodas">Balanceamento de rodas</option>
+            <option value="Preparações">Preparações</option>
+            <option value="Suspensão e amortecedores">Suspensão e amortecedores</option>
+            <option value="Outro">Outro (descrever na observação)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="modelo_moto">Modelo da moto</label>
+          <input type="text" id="modelo_moto" name="modelo_moto" placeholder="Ex: Honda CG 160, Yamaha Fazer 250..." autocomplete="off">
+        </div>
+
+        <div class="form-group">
+          <label for="data">Data *</label>
+          <input type="date" id="data" name="data" required>
+        </div>
+
+        <div class="form-group">
+          <label>Horário *</label>
+          <input type="hidden" id="horario" name="horario">
+          <div id="slotsContainer" class="slots-container">
+            <p class="slots-msg">Selecione uma data para ver os horários disponíveis.</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="observacao">Observação</label>
+          <textarea id="observacao" name="observacao" placeholder="Descreva o problema ou informações adicionais..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-agendar" id="btnAgendar">Confirmar agendamento</button>
+        <div class="feedback" id="feedback"></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <img src="/static/logo.jpg" alt="VEP Performance" class="footer-logo">
+  <p>VEP Performance · Mecânica de Motocicletas · Sete Lagoas MG</p>
+  <div class="footer-links">
+    <a href="https://instagram.com/vep_performance" target="_blank">@vep_performance</a>
+    <a href="tel:31994572780">(31) 99457-2780</a>
+    <a href="/admin">Admin</a>
+  </div>
+</footer>
+
+<script>
+  const feriados = [
+    '2025-01-01','2025-04-18','2025-04-21','2025-05-01','2025-06-19',
+    '2025-09-07','2025-10-12','2025-11-02','2025-11-15','2025-11-20','2025-12-25',
+    '2026-01-01','2026-04-03','2026-04-21','2026-05-01','2026-06-04',
+    '2026-09-07','2026-10-12','2026-11-02','2026-11-15','2026-11-20','2026-12-25'
+  ];
+
+  const dataInput = document.getElementById('data');
+  dataInput.min = new Date().toISOString().split('T')[0];
+
+  dataInput.addEventListener('change', function() {
+    const val = this.value;
+    if (!val) return;
+    const d = new Date(val + 'T12:00:00');
+    if (d.getDay() === 0 || feriados.includes(val)) {
+      alert('Este dia não está disponível (domingo ou feriado).');
+      this.value = '';
+      resetSlots();
+      return;
+    }
+    carregarSlots(val);
+  });
+
+  function resetSlots() {
+    document.getElementById('slotsContainer').innerHTML = '<p class="slots-msg">Selecione uma data para ver os horários disponíveis.</p>';
+    document.getElementById('horario').value = '';
+  }
+
+  async function carregarSlots(data) {
+    const container = document.getElementById('slotsContainer');
+    container.innerHTML = '<p class="slots-msg">Buscando horários...</p>';
+    document.getElementById('horario').value = '';
+    try {
+      const res = await fetch(`/api/slots?data=${data}`);
+      const slots = await res.json();
+      if (!slots.length) {
+        container.innerHTML = '<p class="slots-msg">Sem horários disponíveis nesta data.</p>';
+        return;
+      }
+      container.innerHTML = '';
+      slots.forEach(slot => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'slot-btn';
+        btn.textContent = slot;
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+          this.classList.add('selected');
+          document.getElementById('horario').value = slot;
+        });
+        container.appendChild(btn);
+      });
+    } catch { container.innerHTML = '<p class="slots-msg">Erro ao carregar horários. Tente novamente.</p>'; }
+  }
+
+  document.getElementById('formAgendamento').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    if (!document.getElementById('horario').value) {
+      mostrarFeedback('Selecione um horário antes de confirmar.', 'erro');
+      return;
+    }
+    const btn = document.getElementById('btnAgendar');
+    btn.disabled = true;
+    btn.textContent = 'Aguarde...';
+    try {
+      const res = await fetch('/agendar', { method: 'POST', body: new FormData(this) });
+      const data = await res.json();
+      if (data.sucesso) {
+        mostrarFeedback('✅ Agendamento confirmado! Você receberá uma mensagem no WhatsApp em instantes.', 'sucesso');
+        this.reset();
+        resetSlots();
+      } else {
+        mostrarFeedback(data.erro || 'Erro ao agendar. Tente novamente.', 'erro');
+      }
+    } catch { mostrarFeedback('Erro de conexão. Tente novamente.', 'erro'); }
+    btn.disabled = false;
+    btn.textContent = 'Confirmar agendamento';
+  });
+
+  function mostrarFeedback(msg, tipo) {
+    const el = document.getElementById('feedback');
+    el.textContent = msg;
+    el.className = `feedback ${tipo}`;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    setTimeout(() => el.style.display = 'none', 7000);
+  }
+</script>
+</body>
+</html>
