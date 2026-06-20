@@ -125,6 +125,17 @@ def init_db():
         pass
 
     conn.commit()
+
+    cur.execute("""
+    SELECT table_name
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+    ORDER BY table_name
+    """)
+
+    print("TABELAS EXISTENTES:", cur.fetchall())
+
     cur.close()
     conn.close()
+
     print(f"Banco {'PostgreSQL' if USE_POSTGRES else 'SQLite local'} inicializado.")
