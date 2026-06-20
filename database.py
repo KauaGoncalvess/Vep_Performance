@@ -119,12 +119,14 @@ def init_db():
     try:
         cur.execute("ALTER TABLE agendamentos ADD COLUMN motivo_cancelamento TEXT")
     except Exception as e:
-        print("ERRO ALTER 1:", e)
+        conn.rollback()
+    print("ERRO ALTER 1:", e)
 
     try:
         cur.execute("ALTER TABLE agendamentos ADD COLUMN atualizado_em TEXT")
     except Exception as e:
-        print("ERRO ALTER 2:", e)
+        conn.rollback()
+    print("ERRO ALTER 2:", e)
     print("CREATE TABLES EXECUTADOS")
 
     conn.commit()
