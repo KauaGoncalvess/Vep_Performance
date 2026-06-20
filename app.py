@@ -438,5 +438,54 @@ def erro_404(e):
 def erro_500(e):
     return render_template('500.html'), 500
 
+# ════════════════════════════════════════════
+# SETUP INICIAL — criar primeiro admin via navegador
+# Protegido por chave secreta. REMOVER após o primeiro uso.
+# ════════════════════════════════════════════
+SETUP_KEY = os.environ.get('SETUP_KEY', '')
+
+@app.route('/setup-admin', methods=['GET', 'POST'])
+@csrf.exempt
+def setup_admin():
+    if not SETUP_KEY:
+        return "Setup desativado.", 403
+
+    if request.method == 'GET':
+        return '''
+        <html><body style="font-family:sans-serif;max-width:400px;margin:60px auto;">
+        <h2>Criar admin inicial</h2>
+        <form method="POST">
+            <p><input name="chave" placeholder="Chave secreta" required style="width:100%;padding:8px"></p>
+            <p><input name="nome" placeholder="Nome" required style="width:100%;padding:8px"></p>
+            <p><input name="email" type="email" placeholder="Email" required style="width:100%;padding:8px"></p>
+            <p><input name="senha" type="password" placeholder="Senha (min 8 caracteres)" required style="width:100%;padding:8px"></p>
+            <button type="submit" style="padding:10px 20px">Criar</button>
+        </form>
+        </body></html>
+        '''
+
+    chave = request.form.get('chave', '')
+    if chave != SETUP_KEY:
+        return "Chave incorreta.", 403
+
+    nome = request.form.get('nome', '').strip()
+    email = request.form.get('email', '').strip().lower()
+    senha = request.form.get('senha', '').strip()
+
+    if not nome or not email or len(senha) < 8:
+        return "Dados inválidos (senha precisa ter 8+ caracteres).", 400
+
+    existente = query(f"SELECT id FROM admin_users WHERE email = {PH}", (email,), fetchone=True)
+    if existente:
+        return f"Já existe um admin com o email {email}. Use outro email ou apague esse no banco antes.", 400
+
+    senha_hash = bcrypt.generate_password_hash(senha).decode('utf-8')
+    query(
+        f"INSERT INTO admin_users (nome, email, senha_hash, criado_em) VALUES ({PH},{PH},{PH},{PH})",
+        (nome, email, senha_hash, datetime.now().isoformat()),
+        commit=True
+    )
+    return f"✅ Admin '{nome}' criado com sucesso! Email: {email}. Agora vá em /admin para entrar. IMPORTANTE: remova a variável SETUP_KEY da Render depois disso."
+
 if __name__ == '__main__':
     app.run(debug=False, port=5000)
