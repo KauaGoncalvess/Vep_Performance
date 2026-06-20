@@ -129,13 +129,12 @@ def init_db():
     conn.commit()
 
     cur.execute("""
-    SELECT table_name
-    FROM information_schema.tables
-    WHERE table_schema = 'public'
-    ORDER BY table_name
+    SELECT schemaname, tablename
+    FROM pg_tables
+    ORDER BY schemaname, tablename
     """)
 
-    print("TABELAS EXISTENTES:", cur.fetchall())
+    print("TABELAS PG:", cur.fetchall())
 
     cur.close()
     conn.close()
