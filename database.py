@@ -69,6 +69,7 @@ def init_db():
                 tentado_em TEXT
             )
         """)
+        print("CRIANDO TABELA LOGIN_TENTATIVAS")
     else:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS agendamentos (
@@ -123,6 +124,7 @@ def init_db():
         cur.execute("ALTER TABLE agendamentos ADD COLUMN atualizado_em TEXT")
     except Exception:
         pass
+    print("CREATE TABLES EXECUTADOS")
 
     conn.commit()
 
