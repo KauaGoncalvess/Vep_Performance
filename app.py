@@ -501,11 +501,16 @@ def setup_admin():
     if not nome or not email or len(senha) < 8:
         return "Dados inválidos (senha precisa ter 8+ caracteres).", 400
 
+    senha_hash = bcrypt.generate_password_hash(senha).decode('utf-8')
     existente = query(f"SELECT id FROM admin_users WHERE email = {PH}", (email,), fetchone=True)
     if existente:
-        return f"Já existe um admin com o email {email}. Use outro email ou apague esse no banco antes.", 400
+        query(
+            f"UPDATE admin_users SET nome = {PH}, senha_hash = {PH} WHERE email = {PH}",
+            (nome, senha_hash, email),
+            commit=True
+        )
+        return f"✅ Senha do admin '{email}' atualizada com sucesso! Agora vá em /admin para entrar. IMPORTANTE: remova a variável SETUP_KEY da Render depois disso."
 
-    senha_hash = bcrypt.generate_password_hash(senha).decode('utf-8')
     query(
         f"INSERT INTO admin_users (nome, email, senha_hash, criado_em) VALUES ({PH},{PH},{PH},{PH})",
         (nome, email, senha_hash, agora_br().isoformat()),
