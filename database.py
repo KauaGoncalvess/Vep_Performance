@@ -21,6 +21,13 @@ def get_db():
         conn.row_factory = sqlite3.Row
         return conn
 
+def _exec_safe(conn, cur, sql):
+    try:
+        cur.execute(sql)
+        conn.commit()
+    except Exception:
+        conn.rollback()
+
 def init_db():
     conn = get_db()
     cur = conn.cursor()
@@ -69,6 +76,7 @@ def init_db():
                 tentado_em TEXT
             )
         """)
+        conn.commit()
     else:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS agendamentos (
@@ -113,32 +121,19 @@ def init_db():
                 tentado_em TEXT
             )
         """)
+        conn.commit()
 
-    # Migração leve: garante colunas novas em bancos já existentes
-    if USE_POSTGRES:
-        conn.commit()
-        for col in ['motivo_cancelamento', 'atualizado_em']:
-            try:
-                cur.execute(f"ALTER TABLE agendamentos ADD COLUMN {col} TEXT")
-                conn.commit()
-            except Exception:
-                conn.rollback()
-    else:
-        for col in ['motivo_cancelamento', 'atualizado_em']:
-            try:
-                cur.execute(f"ALTER TABLE agendamentos ADD COLUMN {col} TEXT")
-            except Exception:
-                conn.rollback()
-        conn.commit()
+    # Migração: garante colunas novas em bancos já existentes
+    _exec_safe(conn, cur, "ALTER TABLE agendamentos ADD COLUMN motivo_cancelamento TEXT")
+    _exec_safe(conn, cur, "ALTER TABLE agendamentos ADD COLUMN atualizado_em TEXT")
 
     # Índices para queries frequentes
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_agendamentos_data ON agendamentos (data)")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_agendamentos_status ON agendamentos (status)")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_agendamentos_data_status ON agendamentos (data, status)")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_admin_users_email ON admin_users (email)")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_historico_agendamento_id ON agendamento_historico (agendamento_id)")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_login_tentativas_email ON login_tentativas (email, tentado_em)")
+    _exec_safe(conn, cur, "CREATE INDEX IF NOT EXISTS idx_agendamentos_data ON agendamentos (data)")
+    _exec_safe(conn, cur, "CREATE INDEX IF NOT EXISTS idx_agendamentos_status ON agendamentos (status)")
+    _exec_safe(conn, cur, "CREATE INDEX IF NOT EXISTS idx_agendamentos_data_status ON agendamentos (data, status)")
+    _exec_safe(conn, cur, "CREATE INDEX IF NOT EXISTS idx_admin_users_email ON admin_users (email)")
+    _exec_safe(conn, cur, "CREATE INDEX IF NOT EXISTS idx_historico_agendamento_id ON agendamento_historico (agendamento_id)")
+    _exec_safe(conn, cur, "CREATE INDEX IF NOT EXISTS idx_login_tentativas_email ON login_tentativas (email, tentado_em)")
 
-    conn.commit()
     cur.close()
     conn.close()
