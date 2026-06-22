@@ -69,6 +69,7 @@ def set_security_headers(response):
 
 def query(sql, params=(), fetchone=False, fetchall=False, commit=False):
     conn = get_db()
+    cur = None
     try:
         if USE_POSTGRES:
             import psycopg2.extras
@@ -91,7 +92,8 @@ def query(sql, params=(), fetchone=False, fetchall=False, commit=False):
             conn.commit()
         return result
     finally:
-        cur.close()
+        if cur is not None:
+            cur.close()
         conn.close()
 
 def enviar_whatsapp(numero, mensagem):
