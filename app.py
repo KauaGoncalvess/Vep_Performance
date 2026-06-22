@@ -205,7 +205,7 @@ def agendar():
         agora = agora_br().isoformat()
         query(
             f"""INSERT INTO agendamentos (nome, telefone, servico, data, horario, modelo_moto, observacao, status, criado_em, atualizado_em)
-               VALUES ({PH},{PH},{PH},{PH},{PH},{PH},{PH},'confirmado',{PH},{PH})""",
+               VALUES ({PH},{PH},{PH},{PH},{PH},{PH},{PH},'aguardando',{PH},{PH})""",
             (nome, telefone, servico, data, horario, modelo, obs, agora, agora),
             commit=True
         )
@@ -214,9 +214,10 @@ def agendar():
         num = '55' + telefone.replace('(','').replace(')','').replace('-','').replace(' ','')
 
         enviar_whatsapp(num,
-            f"✅ *Agendamento confirmado, {nome}!*\n\n"
+            f"⏳ *Agendamento recebido, {nome}!*\n\n"
             f"🔧 Serviço: {servico}\n🏍️ Moto: {modelo or 'Não informado'}\n"
             f"📅 Data: {data_fmt}\n🕐 Horário: {horario}\n\n"
+            f"Aguarde a confirmação da oficina.\n"
             f"📍 R. Walter de Almeida Jardim, 141 – Verde Vale, Sete Lagoas\n\nQualquer dúvida, chame a gente! 🤙"
         )
         enviar_whatsapp(WHATSAPP_MECANICO,
@@ -443,6 +444,22 @@ def admin_status_agendamento(id):
             (novo_status, agora_br().isoformat(), id),
             commit=True
         )
+
+    if novo_status == 'confirmado' and ag_atual['status'] != 'confirmado':
+        telefone = ag_atual['telefone']
+        nome = ag_atual['nome']
+        servico = ag_atual['servico']
+        modelo = ag_atual.get('modelo_moto', '') or ag_atual.get('modelo_moto') or ''
+        data_fmt = datetime.strptime(ag_atual['data'], "%Y-%m-%d").strftime("%d/%m/%Y")
+        horario = ag_atual['horario']
+        num = '55' + telefone.replace('(','').replace(')','').replace('-','').replace(' ','')
+        enviar_whatsapp(num,
+            f"✅ *Agendamento confirmado, {nome}!*\n\n"
+            f"🔧 Serviço: {servico}\n🏍️ Moto: {modelo or 'Não informado'}\n"
+            f"📅 Data: {data_fmt}\n🕐 Horário: {horario}\n\n"
+            f"📍 R. Walter de Almeida Jardim, 141 – Verde Vale, Sete Lagoas\n\nQualquer dúvida, chame a gente! 🤙"
+        )
+
     return jsonify({'sucesso': True})
 
 # Mantido por compatibilidade (botão antigo de cancelar rápido)

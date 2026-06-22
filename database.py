@@ -43,7 +43,7 @@ def init_db():
                 horario TEXT NOT NULL,
                 modelo_moto TEXT,
                 observacao TEXT,
-                status TEXT DEFAULT 'confirmado',
+                status TEXT DEFAULT 'aguardando',
                 motivo_cancelamento TEXT,
                 criado_em TEXT,
                 atualizado_em TEXT
@@ -88,7 +88,7 @@ def init_db():
                 horario TEXT NOT NULL,
                 modelo_moto TEXT,
                 observacao TEXT,
-                status TEXT DEFAULT 'confirmado',
+                status TEXT DEFAULT 'aguardando',
                 motivo_cancelamento TEXT,
                 criado_em TEXT,
                 atualizado_em TEXT

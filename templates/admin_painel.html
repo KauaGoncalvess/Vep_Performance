@@ -85,6 +85,8 @@
     }
     .btn-acao:hover { border-color: #E87C1E; color: #E87C1E; }
     .btn-acao.danger:hover { border-color: #ef4444; color: #ef4444; }
+    .btn-confirmar { border-color: #4ade80; color: #4ade80; }
+    .btn-confirmar:hover { background: rgba(34,197,94,0.1); }
 
     .vazio { text-align: center; padding: 80px 24px; color: #333; font-size: 14px; }
     .vazio-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
@@ -202,7 +204,10 @@
               <span class="status-badge status-{{ ag.status }}" id="badge-{{ ag.id }}">{{ ag.status }}</span>
             </div>
             <div class="ag-actions">
-              <button class="btn-acao" data-ag="{{ ag | tojson | e }}" onclick="abrirEditar(JSON.parse(this.dataset.ag))">Editar</button>
+              {% if ag.status == 'aguardando' %}
+              <button class="btn-acao btn-confirmar" data-id="{{ ag.id }}">Confirmar</button>
+              {% endif %}
+              <button class="btn-acao btn-editar" data-ag="{{ ag | tojson | e }}">Editar</button>
               <button class="btn-acao" data-id="{{ ag.id }}" data-status="{{ ag.status }}" onclick="abrirStatus(this.dataset.id, this.dataset.status)">Status</button>
             </div>
           </div>
@@ -373,6 +378,32 @@ document.getElementById('formStatus').addEventListener('submit', async function(
     msg.className = 'modal-msg erro';
   }
 });
+
+document.addEventListener('click', function(e) {
+  const btnEditar = e.target.closest('.btn-editar');
+  if (btnEditar) {
+    e.preventDefault();
+    abrirEditar(JSON.parse(btnEditar.dataset.ag));
+    return;
+  }
+  const btnConfirmar = e.target.closest('.btn-confirmar');
+  if (btnConfirmar) {
+    e.preventDefault();
+    confirmarRapido(btnConfirmar.dataset.id);
+    return;
+  }
+});
+
+async function confirmarRapido(id) {
+  const fd = new FormData();
+  fd.append('csrf_token', CSRF_TOKEN);
+  fd.append('status', 'confirmado');
+  fd.append('motivo', '');
+  const res = await fetch(`/admin/agendamento/${id}/status`, { method: 'POST', body: fd });
+  const data = await res.json();
+  if (data.sucesso) location.reload();
+  else alert(data.erro || 'Erro ao confirmar.');
+}
 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
