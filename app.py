@@ -194,6 +194,9 @@ def agendar():
         if not all([nome, telefone, servico, data, horario]):
             return jsonify({'sucesso': False, 'erro': 'Preencha todos os campos obrigatórios.'})
 
+        if not request.form.get('lgpd'):
+            return jsonify({'sucesso': False, 'erro': 'Você precisa autorizar o uso dos seus dados.'})
+
         if horario not in gerar_slots_disponiveis(data):
             return jsonify({'sucesso': False, 'erro': 'Horário não disponível. Escolha outro.'})
 
