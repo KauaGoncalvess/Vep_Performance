@@ -1,4 +1,5 @@
 import os
+import logging
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from flask_bcrypt import Bcrypt
@@ -12,7 +13,12 @@ import secrets
 load_dotenv()
 
 app = Flask(__name__)
+if not os.environ.get('SECRET_KEY'):
+    logging.warning("SECRET_KEY nao configurada — sessoes serao invalidadas a cada restart")
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') != 'development'
 
 csrf = CSRFProtect(app)
 bcrypt = Bcrypt(app)
@@ -49,42 +55,58 @@ init_db()
 
 PH = '%s' if USE_POSTGRES else '?'
 
+@app.context_processor
+def inject_csrf():
+    return dict(csrf_token=generate_csrf)
+
+@app.after_request
+def set_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    return response
+
 def query(sql, params=(), fetchone=False, fetchall=False, commit=False):
     conn = get_db()
-    if USE_POSTGRES:
-        import psycopg2.extras
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    else:
-        cur = conn.cursor()
-    cur.execute(sql, params)
-    result = None
-    if fetchone:
-        result = cur.fetchone()
-        if result and not USE_POSTGRES:
-            result = dict(result)
-    elif fetchall:
-        rows = cur.fetchall()
-        if rows and not USE_POSTGRES:
-            result = [dict(r) for r in rows]
+    try:
+        if USE_POSTGRES:
+            import psycopg2.extras
+            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         else:
-            result = rows
-    if commit:
-        conn.commit()
-    cur.close()
-    conn.close()
-    return result
+            cur = conn.cursor()
+        cur.execute(sql, params)
+        result = None
+        if fetchone:
+            result = cur.fetchone()
+            if result and not USE_POSTGRES:
+                result = dict(result)
+        elif fetchall:
+            rows = cur.fetchall()
+            if rows and not USE_POSTGRES:
+                result = [dict(r) for r in rows]
+            else:
+                result = rows
+        if commit:
+            conn.commit()
+        return result
+    finally:
+        cur.close()
+        conn.close()
 
 def enviar_whatsapp(numero, mensagem):
     if not EVOLUTION_API_URL or not EVOLUTION_API_KEY:
-        print("WhatsApp não configurado.")
+        logging.warning("WhatsApp nao configurado — EVOLUTION_API_URL ou EVOLUTION_API_KEY ausente")
         return False
     try:
         url = f"{EVOLUTION_API_URL}/message/sendText/{EVOLUTION_INSTANCE}"
         headers = {"Content-Type": "application/json", "apikey": EVOLUTION_API_KEY}
         response = requests.post(url, json={"number": numero, "text": mensagem}, headers=headers, timeout=10)
+        if response.status_code != 200:
+            logging.error("WhatsApp API retornou status %d para numero %s", response.status_code, numero)
         return response.status_code == 200
     except Exception as e:
-        print(f"Erro WhatsApp: {e}")
+        logging.error("Erro ao enviar WhatsApp para %s: %s", numero, e)
         return False
 
 def gerar_slots_disponiveis(data_str, ignorar_id=None):
@@ -125,8 +147,7 @@ def gerar_slots_disponiveis(data_str, ignorar_id=None):
                     slots.append(slot)
             hora += DURACAO_SLOT // 60
         return slots
-    except Exception as e:
-        print(f"Erro slots: {e}")
+    except Exception:
         return []
 
 def registrar_historico(agendamento_id, campo, valor_antigo, valor_novo):
@@ -146,7 +167,11 @@ def index():
 
 @app.route('/health')
 def health():
-    return jsonify({"status": "ok"})
+    try:
+        query("SELECT 1", fetchone=True)
+        return jsonify({"status": "ok"})
+    except Exception:
+        return jsonify({"status": "error", "detail": "database unreachable"}), 503
 
 @app.route('/api/slots')
 def api_slots():
@@ -154,7 +179,6 @@ def api_slots():
     return jsonify(gerar_slots_disponiveis(data) if data else [])
 
 @app.route('/agendar', methods=['POST'])
-@csrf.exempt
 def agendar():
     try:
         nome     = request.form.get('nome', '').strip()
@@ -196,7 +220,7 @@ def agendar():
         return jsonify({'sucesso': True})
 
     except Exception as e:
-        print(f"Erro agendar: {e}")
+        logging.error("Erro ao criar agendamento: %s", e)
         return jsonify({'sucesso': False, 'erro': 'Erro interno. Tente novamente.'})
 
 # ════════════════════════════════════════════
@@ -216,12 +240,7 @@ def checar_bloqueio(email):
     falhas_seguidas = 0
     ultima_tentativa = None
     for t in tentativas:
-        sucesso = t['sucesso']
-        if USE_POSTGRES:
-            sucesso_bool = bool(sucesso)
-        else:
-            sucesso_bool = bool(sucesso)
-        if sucesso_bool:
+        if bool(t['sucesso']):
             break
         falhas_seguidas += 1
         ultima_tentativa = t['tentado_em']
@@ -270,7 +289,7 @@ def admin_entrar():
     registrar_tentativa(email, False if USE_POSTGRES else 0)
     return render_template('admin_login.html', erro='Email ou senha incorretos.')
 
-@app.route('/admin/sair')
+@app.route('/admin/sair', methods=['GET', 'POST'])
 def admin_sair():
     session.clear()
     return redirect(url_for('admin_login'))
@@ -286,7 +305,10 @@ def admin_painel():
 
     busca = request.args.get('busca', '').strip()
     status_filtro = request.args.get('status', '').strip()
-    pagina = max(1, int(request.args.get('pagina', 1)))
+    try:
+        pagina = max(1, int(request.args.get('pagina', 1)))
+    except (ValueError, TypeError):
+        pagina = 1
     por_pagina = 20
 
     where = []
@@ -344,7 +366,6 @@ def admin_ver_agendamento(id):
     return jsonify({'agendamento': ag})
 
 @app.route('/admin/agendamento/<int:id>/editar', methods=['POST'])
-@csrf.exempt
 def admin_editar_agendamento(id):
     if not admin_logado():
         return jsonify({'sucesso': False, 'erro': 'Não autorizado'}), 401
@@ -387,7 +408,6 @@ def admin_editar_agendamento(id):
     return jsonify({'sucesso': True})
 
 @app.route('/admin/agendamento/<int:id>/status', methods=['POST'])
-@csrf.exempt
 def admin_status_agendamento(id):
     if not admin_logado():
         return jsonify({'sucesso': False, 'erro': 'Não autorizado'}), 401
@@ -420,7 +440,6 @@ def admin_status_agendamento(id):
 
 # Mantido por compatibilidade (botão antigo de cancelar rápido)
 @app.route('/admin/cancelar/<int:id>', methods=['POST'])
-@csrf.exempt
 def admin_cancelar(id):
     if not admin_logado():
         return jsonify({'erro': 'Não autorizado'}), 401

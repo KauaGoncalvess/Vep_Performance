@@ -958,6 +958,7 @@
       <p class="form-subtitle">Confirmação automática direto no seu WhatsApp.</p>
 
       <form id="formAgendamento" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-row">
           <div class="form-group">
             <label for="nome">Nome *</label>
@@ -1030,6 +1031,15 @@
     '2026-01-01','2026-04-03','2026-04-21','2026-05-01','2026-06-04',
     '2026-09-07','2026-10-12','2026-11-02','2026-11-15','2026-11-20','2026-12-25'
   ];
+
+  const telefoneInput = document.getElementById('telefone');
+  telefoneInput.addEventListener('input', function() {
+    let v = this.value.replace(/\D/g, '').substring(0, 11);
+    if (v.length > 6) v = `(${v.substring(0,2)}) ${v.substring(2,7)}-${v.substring(7)}`;
+    else if (v.length > 2) v = `(${v.substring(0,2)}) ${v.substring(2)}`;
+    else if (v.length > 0) v = `(${v}`;
+    this.value = v;
+  });
 
   const dataInput = document.getElementById('data');
   dataInput.min = new Date().toISOString().split('T')[0];

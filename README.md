@@ -42,9 +42,10 @@ py -3.11 app.py
 |---|---|
 | DATABASE_URL | URL do PostgreSQL |
 | SECRET_KEY | Chave secreta do Flask (string aleatória longa) |
-| ADMIN_PASSWORD | Senha do painel admin |
+| SETUP_KEY | Chave para criar o primeiro admin via /setup-admin (remover após uso) |
 | EVOLUTION_API_URL | URL da Evolution API (WhatsApp) |
 | EVOLUTION_API_KEY | Chave da Evolution API |
+| EVOLUTION_INSTANCE | Nome da instância na Evolution API (padrão: vep_performance) |
 | WHATSAPP_MECANICO | Número do mecânico com DDI (ex: 5531994572780) |
 
 ## Deploy na Render (gratuito)
@@ -57,4 +58,6 @@ py -3.11 app.py
 
 ## Painel Admin
 
-Acesse `/admin` — use a senha definida em `ADMIN_PASSWORD`
+1. Acesse `/setup-admin` e use a SETUP_KEY para criar o primeiro admin
+2. Remova a variável SETUP_KEY do ambiente após criar o admin
+3. Acesse `/admin` e faça login com email e senha cadastrados

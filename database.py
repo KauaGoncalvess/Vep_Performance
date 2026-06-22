@@ -69,7 +69,6 @@ def init_db():
                 tentado_em TEXT
             )
         """)
-        print("CRIANDO TABELA LOGIN_TENTATIVAS")
     else:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS agendamentos (
@@ -118,26 +117,22 @@ def init_db():
     # Migração leve: garante colunas novas em bancos já existentes
     try:
         cur.execute("ALTER TABLE agendamentos ADD COLUMN motivo_cancelamento TEXT")
-    except Exception as e:
+    except Exception:
         conn.rollback()
 
     try:
         cur.execute("ALTER TABLE agendamentos ADD COLUMN atualizado_em TEXT")
-    except Exception as e:
+    except Exception:
         conn.rollback()
-    print("CREATE TABLES EXECUTADOS")
+
+    # Índices para queries frequentes
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_agendamentos_data ON agendamentos (data)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_agendamentos_status ON agendamentos (status)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_agendamentos_data_status ON agendamentos (data, status)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_admin_users_email ON admin_users (email)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_historico_agendamento_id ON agendamento_historico (agendamento_id)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_login_tentativas_email ON login_tentativas (email, tentado_em)")
 
     conn.commit()
-
-    cur.execute("""
-    SELECT schemaname, tablename
-    FROM pg_tables
-    ORDER BY schemaname, tablename
-    """)
-
-    print("TABELAS PG:", cur.fetchall())
-
     cur.close()
     conn.close()
-
-    print(f"Banco {'PostgreSQL' if USE_POSTGRES else 'SQLite local'} inicializado.")

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Painel – VEP Performance</title>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
@@ -144,7 +145,10 @@
       <div class="header-user">{{ admin_nome }}</div>
     </div>
   </div>
-  <a href="/admin/sair" class="btn-sair">Sair</a>
+  <form method="POST" action="/admin/sair" style="margin:0">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn-sair">Sair</button>
+  </form>
 </header>
 
 <div class="content">
@@ -198,8 +202,8 @@
               <span class="status-badge status-{{ ag.status }}" id="badge-{{ ag.id }}">{{ ag.status }}</span>
             </div>
             <div class="ag-actions">
-              <button class="btn-acao" onclick='abrirEditar({{ ag | tojson }})'>Editar</button>
-              <button class="btn-acao" onclick='abrirStatus({{ ag.id }}, "{{ ag.status }}")'>Status</button>
+              <button class="btn-acao" data-ag="{{ ag | tojson | e }}" onclick="abrirEditar(JSON.parse(this.dataset.ag))">Editar</button>
+              <button class="btn-acao" data-id="{{ ag.id }}" data-status="{{ ag.status }}" onclick="abrirStatus(this.dataset.id, this.dataset.status)">Status</button>
             </div>
           </div>
           {% endfor %}
@@ -299,6 +303,7 @@
 </div>
 
 <script>
+const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').content;
 function abrirModal(id) { document.getElementById(id).classList.add('aberto'); }
 function fecharModal(id) { document.getElementById(id).classList.remove('aberto'); }
 
@@ -318,6 +323,7 @@ document.getElementById('formEditar').addEventListener('submit', async function(
   e.preventDefault();
   const id = document.getElementById('edit-id').value;
   const fd = new FormData();
+  fd.append('csrf_token', CSRF_TOKEN);
   fd.append('nome', document.getElementById('edit-nome').value);
   fd.append('telefone', document.getElementById('edit-telefone').value);
   fd.append('servico', document.getElementById('edit-servico').value);
@@ -353,6 +359,7 @@ document.getElementById('formStatus').addEventListener('submit', async function(
   e.preventDefault();
   const id = document.getElementById('status-id').value;
   const fd = new FormData();
+  fd.append('csrf_token', CSRF_TOKEN);
   fd.append('status', document.getElementById('status-novo').value);
   fd.append('motivo', document.getElementById('status-motivo').value);
 
@@ -365,6 +372,17 @@ document.getElementById('formStatus').addEventListener('submit', async function(
     msg.textContent = data.erro || 'Erro ao salvar.';
     msg.className = 'modal-msg erro';
   }
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.aberto').forEach(m => m.classList.remove('aberto'));
+  }
+});
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('aberto');
+  });
 });
 </script>
 </body>
