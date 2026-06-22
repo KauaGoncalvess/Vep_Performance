@@ -115,15 +115,21 @@ def init_db():
         """)
 
     # Migração leve: garante colunas novas em bancos já existentes
-    try:
-        cur.execute("ALTER TABLE agendamentos ADD COLUMN motivo_cancelamento TEXT")
-    except Exception:
-        conn.rollback()
-
-    try:
-        cur.execute("ALTER TABLE agendamentos ADD COLUMN atualizado_em TEXT")
-    except Exception:
-        conn.rollback()
+    if USE_POSTGRES:
+        conn.commit()
+        for col in ['motivo_cancelamento', 'atualizado_em']:
+            try:
+                cur.execute(f"ALTER TABLE agendamentos ADD COLUMN {col} TEXT")
+                conn.commit()
+            except Exception:
+                conn.rollback()
+    else:
+        for col in ['motivo_cancelamento', 'atualizado_em']:
+            try:
+                cur.execute(f"ALTER TABLE agendamentos ADD COLUMN {col} TEXT")
+            except Exception:
+                conn.rollback()
+        conn.commit()
 
     # Índices para queries frequentes
     cur.execute("CREATE INDEX IF NOT EXISTS idx_agendamentos_data ON agendamentos (data)")
