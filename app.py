@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, s
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from flask_bcrypt import Bcrypt
 from database import init_db, get_db, USE_POSTGRES
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from collections import OrderedDict
 from dotenv import load_dotenv
 import requests
@@ -54,6 +54,10 @@ JANELA_BLOQUEIO_MIN = 15
 init_db()
 
 PH = '%s' if USE_POSTGRES else '?'
+FUSO_BRASILIA = timezone(timedelta(hours=-3))
+
+def agora_br():
+    return datetime.now(FUSO_BRASILIA).replace(tzinfo=None)
 
 @app.context_processor
 def inject_csrf():
@@ -114,7 +118,7 @@ def enviar_whatsapp(numero, mensagem):
 def gerar_slots_disponiveis(data_str, ignorar_id=None):
     try:
         data = datetime.strptime(data_str, "%Y-%m-%d").date()
-        hoje = datetime.now().date()
+        hoje = agora_br().date()
         if data < hoje:
             return []
         dia_semana = data.weekday()
@@ -143,19 +147,20 @@ def gerar_slots_disponiveis(data_str, ignorar_id=None):
             if slot not in horarios_ocupados:
                 if data == hoje:
                     slot_dt = datetime.combine(data, datetime.strptime(slot, "%H:%M").time())
-                    if slot_dt > datetime.now() + timedelta(hours=1):
+                    if slot_dt > agora_br() + timedelta(hours=1):
                         slots.append(slot)
                 else:
                     slots.append(slot)
             hora += DURACAO_SLOT // 60
         return slots
-    except Exception:
+    except Exception as e:
+        logging.error("Erro ao gerar slots para %s: %s", data_str, e)
         return []
 
 def registrar_historico(agendamento_id, campo, valor_antigo, valor_novo):
     query(
         f"INSERT INTO agendamento_historico (agendamento_id, campo, valor_antigo, valor_novo, alterado_em) VALUES ({PH},{PH},{PH},{PH},{PH})",
-        (agendamento_id, campo, str(valor_antigo), str(valor_novo), datetime.now().isoformat()),
+        (agendamento_id, campo, str(valor_antigo), str(valor_novo), agora_br().isoformat()),
         commit=True
     )
 
@@ -200,7 +205,7 @@ def agendar():
         if horario not in gerar_slots_disponiveis(data):
             return jsonify({'sucesso': False, 'erro': 'Horário não disponível. Escolha outro.'})
 
-        agora = datetime.now().isoformat()
+        agora = agora_br().isoformat()
         query(
             f"""INSERT INTO agendamentos (nome, telefone, servico, data, horario, modelo_moto, observacao, status, criado_em, atualizado_em)
                VALUES ({PH},{PH},{PH},{PH},{PH},{PH},{PH},'confirmado',{PH},{PH})""",
@@ -237,7 +242,7 @@ def admin_logado():
 
 def checar_bloqueio(email):
     """Retorna minutos restantes de bloqueio, ou 0 se liberado."""
-    limite = (datetime.now() - timedelta(minutes=JANELA_BLOQUEIO_MIN)).isoformat()
+    limite = (agora_br() - timedelta(minutes=JANELA_BLOQUEIO_MIN)).isoformat()
     tentativas = query(
         f"SELECT sucesso, tentado_em FROM login_tentativas WHERE email = {PH} AND tentado_em > {PH} ORDER BY tentado_em DESC",
         (email, limite), fetchall=True
@@ -252,7 +257,7 @@ def checar_bloqueio(email):
 
     if falhas_seguidas >= MAX_TENTATIVAS and ultima_tentativa:
         liberado_em = datetime.fromisoformat(ultima_tentativa) + timedelta(minutes=JANELA_BLOQUEIO_MIN)
-        restante = (liberado_em - datetime.now()).total_seconds() / 60
+        restante = (liberado_em - agora_br()).total_seconds() / 60
         if restante > 0:
             return round(restante)
     return 0
@@ -260,7 +265,7 @@ def checar_bloqueio(email):
 def registrar_tentativa(email, sucesso):
     query(
         f"INSERT INTO login_tentativas (email, sucesso, tentado_em) VALUES ({PH},{PH},{PH})",
-        (email, sucesso, datetime.now().isoformat()),
+        (email, sucesso, agora_br().isoformat()),
         commit=True
     )
 
@@ -407,7 +412,7 @@ def admin_editar_agendamento(id):
     query(
         f"""UPDATE agendamentos SET nome={PH}, telefone={PH}, servico={PH}, data={PH}, horario={PH}, observacao={PH}, atualizado_em={PH}
             WHERE id={PH}""",
-        (nome, telefone, servico, data, horario, obs, datetime.now().isoformat(), id),
+        (nome, telefone, servico, data, horario, obs, agora_br().isoformat(), id),
         commit=True
     )
     return jsonify({'sucesso': True})
@@ -432,13 +437,13 @@ def admin_status_agendamento(id):
     if novo_status == 'cancelado':
         query(
             f"UPDATE agendamentos SET status={PH}, motivo_cancelamento={PH}, atualizado_em={PH} WHERE id={PH}",
-            (novo_status, motivo, datetime.now().isoformat(), id),
+            (novo_status, motivo, agora_br().isoformat(), id),
             commit=True
         )
     else:
         query(
             f"UPDATE agendamentos SET status={PH}, atualizado_em={PH} WHERE id={PH}",
-            (novo_status, datetime.now().isoformat(), id),
+            (novo_status, agora_br().isoformat(), id),
             commit=True
         )
     return jsonify({'sucesso': True})
@@ -451,7 +456,7 @@ def admin_cancelar(id):
     ag_atual = query(f"SELECT * FROM agendamentos WHERE id = {PH}", (id,), fetchone=True)
     if ag_atual:
         registrar_historico(id, 'status', ag_atual['status'], 'cancelado')
-    query(f"UPDATE agendamentos SET status='cancelado', atualizado_em={PH} WHERE id = {PH}", (datetime.now().isoformat(), id), commit=True)
+    query(f"UPDATE agendamentos SET status='cancelado', atualizado_em={PH} WHERE id = {PH}", (agora_br().isoformat(), id), commit=True)
     return jsonify({'sucesso': True})
 
 @app.errorhandler(404)
@@ -506,7 +511,7 @@ def setup_admin():
     senha_hash = bcrypt.generate_password_hash(senha).decode('utf-8')
     query(
         f"INSERT INTO admin_users (nome, email, senha_hash, criado_em) VALUES ({PH},{PH},{PH},{PH})",
-        (nome, email, senha_hash, datetime.now().isoformat()),
+        (nome, email, senha_hash, agora_br().isoformat()),
         commit=True
     )
     return f"✅ Admin '{nome}' criado com sucesso! Email: {email}. Agora vá em /admin para entrar. IMPORTANTE: remova a variável SETUP_KEY da Render depois disso."
