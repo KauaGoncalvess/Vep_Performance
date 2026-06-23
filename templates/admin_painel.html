@@ -207,7 +207,7 @@
               {% if ag.status == 'aguardando' %}
               <button class="btn-acao btn-confirmar" data-id="{{ ag.id }}">Confirmar</button>
               {% endif %}
-              <button class="btn-acao btn-editar" data-ag="{{ ag | tojson | e }}">Editar</button>
+              <button class="btn-acao btn-editar" data-id="{{ ag.id }}">Editar</button>
               <button class="btn-acao" data-id="{{ ag.id }}" data-status="{{ ag.status }}" onclick="abrirStatus(this.dataset.id, this.dataset.status)">Status</button>
             </div>
           </div>
@@ -309,6 +309,13 @@
 
 <script>
 const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').content;
+const AG_DATA = {
+  {% for data_str, ags in por_data.items() %}
+    {% for ag in ags %}
+    {{ ag.id }}: {{ ag | tojson }},
+    {% endfor %}
+  {% endfor %}
+};
 function abrirModal(id) { document.getElementById(id).classList.add('aberto'); }
 function fecharModal(id) { document.getElementById(id).classList.remove('aberto'); }
 
@@ -383,7 +390,7 @@ document.addEventListener('click', function(e) {
   const btnEditar = e.target.closest('.btn-editar');
   if (btnEditar) {
     e.preventDefault();
-    abrirEditar(JSON.parse(btnEditar.dataset.ag));
+    abrirEditar(AG_DATA[btnEditar.dataset.id]);
     return;
   }
   const btnConfirmar = e.target.closest('.btn-confirmar');
